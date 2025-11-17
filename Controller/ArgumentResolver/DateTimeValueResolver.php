@@ -11,8 +11,8 @@
 
 namespace Symfony\Component\HttpKernel\Controller\ArgumentResolver;
 
+use Amp\Http\Server\Request;
 use Psr\Clock\ClockInterface;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\MapDateTime;
 use Symfony\Component\HttpKernel\Controller\ValueResolverInterface;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
@@ -33,11 +33,11 @@ final class DateTimeValueResolver implements ValueResolverInterface
 
     public function resolve(Request $request, ArgumentMetadata $argument): array
     {
-        if (!is_a($argument->getType(), \DateTimeInterface::class, true) || !$request->attributes->has($argument->getName())) {
+        if (!is_a($argument->getType(), \DateTimeInterface::class, true) || !$request->hasAttribute($argument->getName())) {
             return [];
         }
 
-        $value = $request->attributes->get($argument->getName());
+        $value = $request->getAttribute($argument->getName());
         $class = \DateTimeInterface::class === $argument->getType() ? \DateTimeImmutable::class : $argument->getType();
 
         if (!$value) {

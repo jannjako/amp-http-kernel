@@ -11,7 +11,7 @@
 
 namespace Symfony\Component\HttpKernel\Controller\ArgumentResolver;
 
-use Symfony\Component\HttpFoundation\Request;
+use Amp\Http\Server\Request;
 use Symfony\Component\HttpKernel\Controller\ValueResolverInterface;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
 use Symfony\Component\HttpKernel\Exception\NearMissValueResolverException;

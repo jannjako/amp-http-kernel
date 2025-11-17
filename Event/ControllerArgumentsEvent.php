@@ -11,7 +11,7 @@
 
 namespace Symfony\Component\HttpKernel\Event;
 
-use Symfony\Component\HttpFoundation\Request;
+use Amp\Http\Server\Request;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 /**
@@ -36,12 +36,11 @@ final class ControllerArgumentsEvent extends KernelEvent
         callable|ControllerEvent $controller,
         private array $arguments,
         Request $request,
-        ?int $requestType,
     ) {
-        parent::__construct($kernel, $request, $requestType);
+        parent::__construct($kernel, $request);
 
         if (!$controller instanceof ControllerEvent) {
-            $controller = new ControllerEvent($kernel, $controller, $request, $requestType);
+            $controller = new ControllerEvent($kernel, $controller, $request);
         }
 
         $this->controllerEvent = $controller;

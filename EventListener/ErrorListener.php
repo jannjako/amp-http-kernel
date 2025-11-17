@@ -11,12 +11,12 @@
 
 namespace Symfony\Component\HttpKernel\EventListener;
 
+use Amp\Http\Server\Request;
 use Psr\Log\LoggerInterface;
 use Psr\Log\LogLevel;
 use Symfony\Component\ErrorHandler\ErrorHandler;
 use Symfony\Component\ErrorHandler\Exception\FlattenException;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\WithHttpStatus;
 use Symfony\Component\HttpKernel\Attribute\WithLogLevel;
 use Symfony\Component\HttpKernel\Event\ControllerArgumentsEvent;
@@ -24,9 +24,10 @@ use Symfony\Component\HttpKernel\Event\ExceptionEvent;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
-use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 use Symfony\Component\HttpKernel\Log\DebugLoggerConfigurator;
+
+//use Symfony\Component\HttpFoundation\Request;
 
 /**
  * @author Fabien Potencier <fabien@symfony.com>
@@ -96,7 +97,7 @@ class ErrorListener implements EventSubscriberInterface
         $request = $this->duplicateRequest($throwable, $event->getRequest());
 
         try {
-            $response = $event->getKernel()->handle($request, HttpKernelInterface::SUB_REQUEST, false);
+            $response = $event->getKernel()->handle($request, false);
         } catch (\Exception $e) {
             $f = FlattenException::createFromThrowable($e);
 
@@ -118,20 +119,20 @@ class ErrorListener implements EventSubscriberInterface
         $event->setResponse($response);
 
         if ($this->debug) {
-            $event->getRequest()->attributes->set('_remove_csp_headers', true);
+            $event->getRequest()->setAttribute('_remove_csp_headers', true);
         }
     }
 
     public function removeCspHeader(ResponseEvent $event): void
     {
-        if ($this->debug && $event->getRequest()->attributes->get('_remove_csp_headers', false)) {
-            $event->getResponse()->headers->remove('Content-Security-Policy');
+        if ($this->debug && ($event->getRequest()->getAttribute('_remove_csp_headers') ?? false)) {
+            $event->getResponse()->removeHeader('Content-Security-Policy');
         }
     }
 
     public function onControllerArguments(ControllerArgumentsEvent $event): void
     {
-        $e = $event->getRequest()->attributes->get('exception');
+        $e = $event->getRequest()->getAttribute('exception');
 
         if (!$e instanceof \Throwable || false === $k = array_search($e, $event->getArguments(), true)) {
             return;
@@ -220,6 +221,8 @@ class ErrorListener implements EventSubscriberInterface
             'exception' => $exception,
             'logger' => DebugLoggerConfigurator::getDebugLogger($this->getLogger($this->resolveLogChannel($exception))),
         ];
+
+        // TODO: duplicate request
         $request = $request->duplicate(null, null, $attributes);
         $request->setMethod('GET');
 

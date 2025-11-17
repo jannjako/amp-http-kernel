@@ -11,7 +11,7 @@
 
 namespace Symfony\Component\HttpKernel\Controller\ArgumentResolver;
 
-use Symfony\Component\HttpFoundation\Request;
+use Amp\Http\Server\Request;
 use Symfony\Component\HttpKernel\Attribute\MapQueryParameter;
 use Symfony\Component\HttpKernel\Controller\ValueResolverInterface;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
@@ -37,7 +37,7 @@ final class QueryParameterValueResolver implements ValueResolverInterface
         $name = $attribute->name ?? $argument->getName();
         $validationFailedCode = $attribute->validationFailedStatusCode;
 
-        if (!$request->query->has($name)) {
+        if (!$request->hasQueryParameter($name)) {
             if ($argument->isNullable() || $argument->hasDefaultValue()) {
                 return [];
             }
@@ -45,7 +45,43 @@ final class QueryParameterValueResolver implements ValueResolverInterface
             throw HttpException::fromStatusCode($validationFailedCode, \sprintf('Missing query parameter "%s".', $name));
         }
 
-        $value = $request->query->all()[$name];
+        /*
+         * http-server handles query parameters differently for single-valued parameters.
+         * http-server:
+         * [
+         *  'name' => ['Jakub'],
+         *  'age' => ['30'],
+         *  'tags' => ['php', 'amp']
+         * ]
+         *
+         * http-foundation:
+         * [
+         *  'name' => 'Jakub',
+         *  'age' => '30',
+         *  'tags' => ['php', 'amp']
+         * ]
+         *
+         * That's why it needs to be flattened
+         */
+        $flattened = [];
+
+        foreach ($request->getQueryParameters() as $key => $values) {
+            if (is_array($values)) {
+                if (count($values) === 1) {
+                    // single value → flatten
+                    $flattened[$key] = $values[0];
+                } else {
+                    // multiple values → keep array as is
+                    $flattened[$key] = $values;
+                }
+            } else {
+                // should not happen in Amp, just keep as is
+                $flattened[$key] = $values;
+            }
+        }
+
+        $value = $flattened[$name];
+
         $type = $argument->getType();
 
         if (null === $attribute->filter && 'array' === $type) {

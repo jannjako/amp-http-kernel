@@ -11,7 +11,7 @@
 
 namespace Symfony\Component\HttpKernel\Event;
 
-use Symfony\Component\HttpFoundation\Request;
+use Amp\Http\Server\Request;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 /**
@@ -35,11 +35,10 @@ final class ExceptionEvent extends RequestEvent
     public function __construct(
         HttpKernelInterface $kernel,
         Request $request,
-        int $requestType,
         \Throwable $e,
         private bool $isKernelTerminating = false,
     ) {
-        parent::__construct($kernel, $request, $requestType);
+        parent::__construct($kernel, $request);
 
         $this->setThrowable($e);
     }

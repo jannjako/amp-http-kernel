@@ -11,9 +11,9 @@
 
 namespace Symfony\Component\HttpKernel\Controller\ArgumentResolver;
 
+use Amp\Http\Server\FormParser\Form;
+use Amp\Http\Server\Request;
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
-use Symfony\Component\HttpFoundation\File\UploadedFile;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\MapQueryString;
 use Symfony\Component\HttpKernel\Attribute\MapRequestPayload;
 use Symfony\Component\HttpKernel\Attribute\MapUploadedFile;
@@ -40,6 +40,7 @@ use Symfony\Contracts\Translation\TranslatorInterface;
 
 /**
  * @author Konstantin Myakshin <molodchick@gmail.com>
+ * @author Jakob Tapuć <jakub.groncki@gmail.com>
  *
  * @final
  */
@@ -101,6 +102,8 @@ class RequestPayloadValueResolver implements ValueResolverInterface, EventSubscr
     {
         $arguments = $event->getArguments();
 
+        dump('onKernelControllerArguments');
+
         foreach ($arguments as $i => $argument) {
             if ($argument instanceof MapQueryString) {
                 $payloadMapper = $this->mapQueryString(...);
@@ -108,13 +111,15 @@ class RequestPayloadValueResolver implements ValueResolverInterface, EventSubscr
             } elseif ($argument instanceof MapRequestPayload) {
                 $payloadMapper = $this->mapRequestPayload(...);
                 $validationFailedCode = $argument->validationFailedStatusCode;
-            } elseif ($argument instanceof MapUploadedFile) {
-                $payloadMapper = $this->mapUploadedFile(...);
-                $validationFailedCode = $argument->validationFailedStatusCode;
+//            } elseif ($argument instanceof MapUploadedFile) {
+//                $payloadMapper = $this->mapUploadedFile(...);
+//                $validationFailedCode = $argument->validationFailedStatusCode;
             } else {
                 continue;
             }
             $request = $event->getRequest();
+
+            dump('after request');
 
             if (!$argument->metadata->getType()) {
                 throw new \LogicException(\sprintf('Could not resolve the "$%s" controller argument: argument should be typed.', $argument->metadata->getName()));
@@ -156,6 +161,7 @@ class RequestPayloadValueResolver implements ValueResolverInterface, EventSubscr
             } else {
                 try {
                     $payload = $payloadMapper($request, $argument->metadata, $argument);
+                    dump('payload');
                 } catch (PartialDenormalizationException $e) {
                     throw HttpException::fromStatusCode($validationFailedCode, implode("\n", array_map(static fn ($e) => $e->getMessage(), $e->getErrors())), $e);
                 }
@@ -184,7 +190,7 @@ class RequestPayloadValueResolver implements ValueResolverInterface, EventSubscr
 
     private function mapQueryString(Request $request, ArgumentMetadata $argument, MapQueryString $attribute): ?object
     {
-        if (!($data = $request->query->all($attribute->key)) && ($argument->isNullable() || $argument->hasDefaultValue())) {
+        if (!($data = $request->getQueryParameterArray($attribute->key)) && ($argument->isNullable() || $argument->hasDefaultValue())) {
             return null;
         }
 
@@ -193,7 +199,7 @@ class RequestPayloadValueResolver implements ValueResolverInterface, EventSubscr
 
     private function mapRequestPayload(Request $request, ArgumentMetadata $argument, MapRequestPayload $attribute): object|array|null
     {
-        if (null === $format = $request->getContentTypeFormat()) {
+        if (null === $format = $this->getFormatFromContentType($request->getHeader('Content-Type'))) {
             throw new UnsupportedMediaTypeHttpException('Unsupported format.');
         }
 
@@ -207,11 +213,12 @@ class RequestPayloadValueResolver implements ValueResolverInterface, EventSubscr
             $type = $argument->getType();
         }
 
-        if ($data = $request->request->all()) {
+        $form = Form::fromRequest($request);
+        if ($data = $form->getValues()) {
             return $this->serializer->denormalize($data, $type, 'csv', $attribute->serializationContext + self::CONTEXT_DENORMALIZE + ('form' === $format ? ['filter_bool' => true] : []));
         }
 
-        if ('' === ($data = $request->getContent()) && ($argument->isNullable() || $argument->hasDefaultValue())) {
+        if ('' === ($data = $request->getBody()->buffer()) && ($argument->isNullable() || $argument->hasDefaultValue())) {
             return null;
         }
 
@@ -230,12 +237,39 @@ class RequestPayloadValueResolver implements ValueResolverInterface, EventSubscr
         }
     }
 
-    private function mapUploadedFile(Request $request, ArgumentMetadata $argument, MapUploadedFile $attribute): UploadedFile|array|null
+    private function getFormatFromContentType(string $contentType): ?string
     {
-        if (!($files = $request->files->get($attribute->name ?? $argument->getName())) && ($argument->isNullable() || $argument->hasDefaultValue())) {
-            return null;
-        }
-
-        return $files ?? ('array' === $argument->getType() ? [] : null);
+        return match ($contentType) {
+            'text/html', 'application/xhtml+xml' => 'html',
+            'text/plain' => 'txt',
+            'application/javascript', 'application/x-javascript', 'text/javascript' => 'js',
+            'text/css' => 'css',
+            'application/json', 'application/x-json' => 'json',
+            'application/ld+json' => 'jsonld',
+            'text/xml', 'application/xml', 'application/x-xml' => 'xml',
+            'application/rdf+xml' => 'rdf',
+            'application/atom+xml' => 'atom',
+            'application/rss+xml' => 'rss',
+            'application/x-www-form-urlencoded', 'multipart/form-data' => 'form',
+            default => null,
+        };
     }
+
+    // TODO: adapter for uploaded files
+//    private function mapUploadedFile(Request $request, ArgumentMetadata $argument, MapUploadedFile $attribute): UploadedFile|array|null
+//    {
+//        $parser = new StreamingFormParser();
+//        $fields = $parser->parseForm($request);
+//
+//        $files = [];
+//        foreach ($fields as $field) {
+//            $files[$field->getName()] = $field->buffer();
+//        }
+//
+//        if (!($files = $request->files->get($attribute->name ?? $argument->getName())) && ($argument->isNullable() || $argument->hasDefaultValue())) {
+//            return null;
+//        }
+//
+//        return $files ?? ('array' === $argument->getType() ? [] : null);
+//    }
 }

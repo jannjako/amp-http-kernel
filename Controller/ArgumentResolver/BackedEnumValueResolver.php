@@ -11,7 +11,7 @@
 
 namespace Symfony\Component\HttpKernel\Controller\ArgumentResolver;
 
-use Symfony\Component\HttpFoundation\Request;
+use Amp\Http\Server\Request;
 use Symfony\Component\HttpKernel\Controller\ValueResolverInterface;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -38,11 +38,11 @@ final class BackedEnumValueResolver implements ValueResolverInterface
         // do not support if no value can be resolved at all
         // letting the \Symfony\Component\HttpKernel\Controller\ArgumentResolver\DefaultValueResolver be used
         // or \Symfony\Component\HttpKernel\Controller\ArgumentResolver fail with a meaningful error.
-        if (!$request->attributes->has($argument->getName())) {
+        if (!$request->hasAttribute($argument->getName())) {
             return [];
         }
 
-        $value = $request->attributes->get($argument->getName());
+        $value = $request->getAttribute($argument->getName());
 
         if (null === $value) {
             return [null];

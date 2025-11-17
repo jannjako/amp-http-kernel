@@ -11,7 +11,8 @@
 
 namespace Symfony\Component\HttpKernel\Controller;
 
-use Symfony\Component\HttpFoundation\Request;
+
+use Amp\Http\Server\Request;
 
 /**
  * A ControllerResolverInterface implementation knows how to determine the

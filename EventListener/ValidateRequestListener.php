@@ -29,16 +29,17 @@ class ValidateRequestListener implements EventSubscriberInterface
      */
     public function onKernelRequest(RequestEvent $event): void
     {
-        if (!$event->isMainRequest()) {
-            return;
-        }
-        $request = $event->getRequest();
-
-        if ($request::getTrustedProxies()) {
-            $request->getClientIps();
-        }
-
-        $request->getHost();
+//        if (!$event->isMainRequest()) {
+//            return;
+//        }
+//        $request = $event->getRequest();
+//
+//        // TODO: find a way to make it compatible
+//        if ($request::getTrustedProxies()) {
+//            $request->getClientIps();
+//        }
+//
+//        $request->getHost();
     }
 
     public static function getSubscribedEvents(): array

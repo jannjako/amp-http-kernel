@@ -11,8 +11,8 @@
 
 namespace Symfony\Component\HttpKernel;
 
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
+use Amp\Http\Server\Request;
+use Amp\Http\Server\Response;
 
 /**
  * Terminable extends the Kernel request/response cycle with dispatching a post

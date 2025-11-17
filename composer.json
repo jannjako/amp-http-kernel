@@ -1,7 +1,7 @@
 {
-    "name": "symfony/http-kernel",
+    "name": "php-star/http-kernel",
     "type": "library",
-    "description": "Provides a structured process for converting a Request into a Response",
+    "description": "Provides a structured process for converting an amphp/http-server Request into a Response",
     "keywords": [],
     "homepage": "https://symfony.com",
     "license": "MIT",
@@ -13,6 +13,10 @@
         {
             "name": "Symfony Community",
             "homepage": "https://symfony.com/contributors"
+        },
+        {
+            "name": "Jakob Tapuć",
+            "email": "jakub.groncki@gmail.com"
         }
     ],
     "require": {
@@ -24,12 +28,17 @@
         "psr/log": "^1|^2|^3",
         "amphp/amp": "3.x-dev",
         "amphp/http": "2.x-dev",
-        "amphp/http-server": "3.x-dev"
+        "amphp/http-server": "3.x-dev",
+        "monolog/monolog": "^3.0@dev",
+        "amphp/http-server-form-parser": "2.x-dev",
+        "amphp/log": "2.x-dev",
+        "symfony/config": "8.0.x-dev",
+        "amphp/file": "4.x-dev",
+        "symfony/validator": "8.1.x-dev"
     },
     "require-dev": {
         "symfony/browser-kit": "^6.4|^7.0",
         "symfony/clock": "^6.4|^7.0",
-        "symfony/config": "^6.4|^7.0",
         "symfony/console": "^6.4|^7.0",
         "symfony/css-selector": "^6.4|^7.0",
         "symfony/dependency-injection": "^6.4|^7.0",
@@ -45,7 +54,6 @@
         "symfony/translation": "^6.4|^7.0",
         "symfony/translation-contracts": "^2.5|^3",
         "symfony/uid": "^6.4|^7.0",
-        "symfony/validator": "^6.4|^7.0",
         "symfony/var-dumper": "^6.4|^7.0",
         "symfony/var-exporter": "^6.4|^7.0",
         "psr/cache": "^1.0|^2.0|^3.0",

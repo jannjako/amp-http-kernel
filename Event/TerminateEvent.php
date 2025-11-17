@@ -11,8 +11,8 @@
 
 namespace Symfony\Component\HttpKernel\Event;
 
-use Symfony\Component\HttpFoundation\Request;
-use Symfony\Component\HttpFoundation\Response;
+use Amp\Http\Server\Request;
+use Amp\Http\Server\Response;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 /**
@@ -30,7 +30,7 @@ final class TerminateEvent extends KernelEvent
         Request $request,
         private Response $response,
     ) {
-        parent::__construct($kernel, $request, HttpKernelInterface::MAIN_REQUEST);
+        parent::__construct($kernel, $request);
     }
 
     public function getResponse(): Response

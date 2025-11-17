@@ -11,10 +11,11 @@
 
 namespace Symfony\Component\HttpKernel\Controller;
 
+use Amp\Http\Server\MissingAttributeError;
+use Amp\Http\Server\Request;
 use Psr\Log\LoggerInterface;
-use Symfony\Component\HttpFoundation\Exception\BadRequestException;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\AsController;
+use Symfony\Component\HttpKernel\Exception\BadRequestHttpException;
 
 /**
  * This implementation uses the '_controller' request attribute to determine
@@ -49,11 +50,12 @@ class ControllerResolver implements ControllerResolverInterface
     }
 
     /**
-     * @throws BadRequestException when the request has attribute "_check_controller_is_allowed" set to true and the controller is not allowed
+     * @throws BadRequestHttpException when the request has attribute "_check_controller_is_allowed" set to true and the controller is not allowed
      */
     public function getController(Request $request): callable|false
     {
-        if (!$controller = $request->attributes->get('_controller')) {
+        // FIXME: this will fail everytime _controller is empty, Amp throws an exception here
+        if (!$controller = $request->getAttribute('_controller')) {
             $this->logger?->warning('Unable to look for the controller as the "_controller" parameter is missing.');
 
             return false;
@@ -223,9 +225,17 @@ class ControllerResolver implements ControllerResolverInterface
 
     private function checkController(Request $request, callable $controller): callable
     {
-        if (!$request->attributes->get('_check_controller_is_allowed', false)) {
+        try {
+            if (!$request->getAttribute('_check_controller_is_allowed')) {
+                return $controller;
+            }
+        } catch (MissingAttributeError) {
             return $controller;
         }
+
+//        if (!$request->getAttribute('_check_controller_is_allowed', false)) {
+//            return $controller;
+//        }
 
         $r = null;
 
@@ -267,6 +277,6 @@ class ControllerResolver implements ControllerResolverInterface
             $name = preg_replace_callback('/[a-zA-Z_\x7f-\xff][\\\\a-zA-Z0-9_\x7f-\xff]*+@anonymous\x00.*?\.php(?:0x?|:[0-9]++\$)?[0-9a-fA-F]++/', fn ($m) => class_exists($m[0], false) ? (get_parent_class($m[0]) ?: key(class_implements($m[0])) ?: 'class').'@anonymous' : $m[0], $name);
         }
 
-        throw new BadRequestException(\sprintf('Callable "%s()" is not allowed as a controller. Did you miss tagging it with "#[AsController]" or registering its type with "%s::allowControllers()"?', $name, self::class));
+        throw new BadRequestHttpException(\sprintf('Callable "%s()" is not allowed as a controller. Did you miss tagging it with "#[AsController]" or registering its type with "%s::allowControllers()"?', $name, self::class));
     }
 }

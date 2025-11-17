@@ -11,12 +11,13 @@
 
 namespace Symfony\Component\HttpKernel\Controller\ArgumentResolver;
 
+use Amp\Http\Server\Request;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\DependencyInjection\Exception\RuntimeException;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Controller\ValueResolverInterface;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
 use Symfony\Component\HttpKernel\Exception\NearMissValueResolverException;
+use Symfony\Component\Routing\RequestContext;
 
 /**
  * Yields a service keyed by _controller and argument name.
@@ -32,7 +33,7 @@ final class ServiceValueResolver implements ValueResolverInterface
 
     public function resolve(Request $request, ArgumentMetadata $argument): array
     {
-        $controller = $request->attributes->get('_controller');
+        $controller = $request->getAttribute('_controller');
 
         if (\is_array($controller) && \is_callable($controller, true) && \is_string($controller[0])) {
             $controller = $controller[0].'::'.$controller[1];

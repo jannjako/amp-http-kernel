@@ -11,7 +11,7 @@
 
 namespace Symfony\Component\HttpKernel\Event;
 
-use Symfony\Component\HttpFoundation\Request;
+use Amp\Http\Server\Request;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 
 /**
@@ -31,9 +31,9 @@ final class ControllerEvent extends KernelEvent
     private \ReflectionFunctionAbstract $controllerReflector;
     private array $attributes;
 
-    public function __construct(HttpKernelInterface $kernel, callable $controller, Request $request, ?int $requestType)
+    public function __construct(HttpKernelInterface $kernel, callable $controller, Request $request)
     {
-        parent::__construct($kernel, $request, $requestType);
+        parent::__construct($kernel, $request);
 
         $this->setController($controller);
     }

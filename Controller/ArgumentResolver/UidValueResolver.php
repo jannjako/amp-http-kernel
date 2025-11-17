@@ -11,7 +11,7 @@
 
 namespace Symfony\Component\HttpKernel\Controller\ArgumentResolver;
 
-use Symfony\Component\HttpFoundation\Request;
+use Amp\Http\Server\Request;
 use Symfony\Component\HttpKernel\Controller\ValueResolverInterface;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
 use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
@@ -22,7 +22,7 @@ final class UidValueResolver implements ValueResolverInterface
     public function resolve(Request $request, ArgumentMetadata $argument): array
     {
         if ($argument->isVariadic()
-            || !\is_string($value = $request->attributes->get($argument->getName()))
+            || !\is_string($value = $request->getAttribute($argument->getName()))
             || null === ($uidClass = $argument->getType())
             || !is_subclass_of($uidClass, AbstractUid::class, true)
         ) {

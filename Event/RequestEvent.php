@@ -11,7 +11,7 @@
 
 namespace Symfony\Component\HttpKernel\Event;
 
-use Symfony\Component\HttpFoundation\Response;
+use Amp\Http\Server\Response;
 
 /**
  * Allows to create a response for a request.

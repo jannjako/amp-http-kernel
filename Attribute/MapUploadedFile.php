@@ -11,7 +11,7 @@
 
 namespace Symfony\Component\HttpKernel\Attribute;
 
-use Symfony\Component\HttpFoundation\Response;
+use Amp\Http\HttpStatus;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolver\RequestPayloadValueResolver;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadata;
 use Symfony\Component\Validator\Constraint;
@@ -26,7 +26,7 @@ class MapUploadedFile extends ValueResolver
         public Constraint|array|null $constraints = null,
         public ?string $name = null,
         string $resolver = RequestPayloadValueResolver::class,
-        public readonly int $validationFailedStatusCode = Response::HTTP_UNPROCESSABLE_ENTITY,
+        public readonly int $validationFailedStatusCode = HttpStatus::UNPROCESSABLE_ENTITY,
     ) {
         parent::__construct($resolver);
     }

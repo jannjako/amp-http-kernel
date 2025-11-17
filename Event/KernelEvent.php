@@ -11,7 +11,7 @@
 
 namespace Symfony\Component\HttpKernel\Event;
 
-use Symfony\Component\HttpFoundation\Request;
+use Amp\Http\Server\Request;
 use Symfony\Component\HttpKernel\HttpKernelInterface;
 use Symfony\Contracts\EventDispatcher\Event;
 
@@ -22,14 +22,9 @@ use Symfony\Contracts\EventDispatcher\Event;
  */
 class KernelEvent extends Event
 {
-    /**
-     * @param int $requestType The request type the kernel is currently processing; one of
-     *                         HttpKernelInterface::MAIN_REQUEST or HttpKernelInterface::SUB_REQUEST
-     */
     public function __construct(
         private HttpKernelInterface $kernel,
         private Request $request,
-        private ?int $requestType,
     ) {
     }
 
@@ -47,24 +42,5 @@ class KernelEvent extends Event
     public function getRequest(): Request
     {
         return $this->request;
-    }
-
-    /**
-     * Returns the request type the kernel is currently processing.
-     *
-     * @return int One of HttpKernelInterface::MAIN_REQUEST and
-     *             HttpKernelInterface::SUB_REQUEST
-     */
-    public function getRequestType(): int
-    {
-        return $this->requestType;
-    }
-
-    /**
-     * Checks if this is the main request.
-     */
-    public function isMainRequest(): bool
-    {
-        return HttpKernelInterface::MAIN_REQUEST === $this->requestType;
     }
 }

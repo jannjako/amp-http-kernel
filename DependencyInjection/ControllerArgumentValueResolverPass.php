@@ -18,7 +18,6 @@ use Symfony\Component\DependencyInjection\Compiler\CompilerPassInterface;
 use Symfony\Component\DependencyInjection\Compiler\PriorityTaggedServiceTrait;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
 use Symfony\Component\DependencyInjection\Reference;
-use Symfony\Component\HttpKernel\Controller\ArgumentResolver\TraceableValueResolver;
 use Symfony\Component\Stopwatch\Stopwatch;
 
 /**
@@ -45,19 +44,6 @@ class ControllerArgumentValueResolverPass implements CompilerPassInterface
                 unset($resolvers[$name]);
             } else {
                 $namedResolvers[$name] ??= clone $resolver;
-            }
-        }
-
-        if ($container->getParameter('kernel.debug') && class_exists(Stopwatch::class) && $container->has('debug.stopwatch')) {
-            foreach ($resolvers as $name => $resolver) {
-                $resolvers[$name] = new Reference('.debug.value_resolver.'.$resolver);
-                $container->register('.debug.value_resolver.'.$resolver, TraceableValueResolver::class)
-                    ->setArguments([$resolver, new Reference('debug.stopwatch')]);
-            }
-            foreach ($namedResolvers as $name => $resolver) {
-                $namedResolvers[$name] = new Reference('.debug.value_resolver.'.$resolver);
-                $container->register('.debug.value_resolver.'.$resolver, TraceableValueResolver::class)
-                    ->setArguments([$resolver, new Reference('debug.stopwatch')]);
             }
         }
 

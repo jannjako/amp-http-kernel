@@ -11,13 +11,12 @@
 
 namespace Symfony\Component\HttpKernel\Controller;
 
+use Amp\Http\Server\Request;
 use Psr\Container\ContainerInterface;
-use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpKernel\Attribute\ValueResolver;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolver\DefaultValueResolver;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolver\RequestAttributeValueResolver;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolver\RequestValueResolver;
-use Symfony\Component\HttpKernel\Controller\ArgumentResolver\SessionValueResolver;
 use Symfony\Component\HttpKernel\Controller\ArgumentResolver\VariadicValueResolver;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadataFactory;
 use Symfony\Component\HttpKernel\ControllerMetadata\ArgumentMetadataFactoryInterface;
@@ -49,11 +48,14 @@ final class ArgumentResolver implements ArgumentResolverInterface
 
     public function getArguments(Request $request, callable $controller, ?\ReflectionFunctionAbstract $reflector = null): array
     {
+        dump('getArguments');
         $arguments = [];
 
         foreach ($this->argumentMetadataFactory->createArgumentMetadata($controller, $reflector) as $metadata) {
             $argumentValueResolvers = $this->argumentValueResolvers;
             $disabledResolvers = [];
+
+            dump('1');
 
             if ($this->namedResolvers && $attributes = $metadata->getAttributesOfType(ValueResolver::class, $metadata::IS_INSTANCEOF)) {
                 $resolverName = null;
@@ -67,6 +69,7 @@ final class ArgumentResolver implements ArgumentResolverInterface
                     }
                 }
 
+                dump('2');
                 if ($resolverName) {
                     if (!$this->namedResolvers->has($resolverName)) {
                         throw new ResolverNotFoundException($resolverName, $this->namedResolvers instanceof ServiceProviderInterface ? array_keys($this->namedResolvers->getProvidedServices()) : []);
@@ -80,11 +83,15 @@ final class ArgumentResolver implements ArgumentResolverInterface
                 }
             }
 
+            dump('3');
             $valueResolverExceptions = [];
             foreach ($argumentValueResolvers as $name => $resolver) {
+                dump($resolver::class);
                 if (isset($disabledResolvers[\is_int($name) ? $resolver::class : $name])) {
                     continue;
                 }
+
+                dump('4');
 
                 try {
                     $count = 0;
@@ -105,6 +112,8 @@ final class ArgumentResolver implements ArgumentResolverInterface
                     continue 2;
                 }
             }
+
+            dump('4');
 
             $reasons = array_map(static fn (NearMissValueResolverException $e) => $e->getMessage(), $valueResolverExceptions);
             if (!$reasons) {
@@ -133,7 +142,6 @@ final class ArgumentResolver implements ArgumentResolverInterface
         return [
             new RequestAttributeValueResolver(),
             new RequestValueResolver(),
-            new SessionValueResolver(),
             new DefaultValueResolver(),
             new VariadicValueResolver(),
         ];

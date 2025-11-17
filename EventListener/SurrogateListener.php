@@ -13,8 +13,6 @@ namespace Symfony\Component\HttpKernel\EventListener;
 
 use Symfony\Component\EventDispatcher\EventSubscriberInterface;
 use Symfony\Component\HttpKernel\Event\ResponseEvent;
-use Symfony\Component\HttpKernel\HttpCache\HttpCache;
-use Symfony\Component\HttpKernel\HttpCache\SurrogateInterface;
 use Symfony\Component\HttpKernel\KernelEvents;
 
 /**
@@ -26,34 +24,27 @@ use Symfony\Component\HttpKernel\KernelEvents;
  */
 class SurrogateListener implements EventSubscriberInterface
 {
-    public function __construct(
-        private ?SurrogateInterface $surrogate = null,
-    ) {
-    }
-
     /**
      * Filters the Response.
      */
     public function onKernelResponse(ResponseEvent $event): void
     {
-        if (!$event->isMainRequest()) {
-            return;
-        }
+        // TODO: Idk, perhaps there should be a real PSR6 cache implementation
+        // TODO: or http cache but async so it doesn't block the loop
+//        $kernel = $event->getKernel();
+//        $surrogate = $this->surrogate;
+//        if ($kernel instanceof HttpCache) {
+//            $surrogate = $kernel->getSurrogate();
+//            if (null !== $this->surrogate && $this->surrogate->getName() !== $surrogate->getName()) {
+//                $surrogate = $this->surrogate;
+//            }
+//        }
 
-        $kernel = $event->getKernel();
-        $surrogate = $this->surrogate;
-        if ($kernel instanceof HttpCache) {
-            $surrogate = $kernel->getSurrogate();
-            if (null !== $this->surrogate && $this->surrogate->getName() !== $surrogate->getName()) {
-                $surrogate = $this->surrogate;
-            }
-        }
-
-        if (null === $surrogate) {
-            return;
-        }
-
-        $surrogate->addSurrogateControl($event->getResponse());
+//        if (null === $surrogate) {
+//            return;
+//        }
+//
+//        $surrogate->addSurrogateControl($event->getResponse());
     }
 
     public static function getSubscribedEvents(): array

@@ -11,8 +11,6 @@
 
 namespace Symfony\Component\HttpKernel\Controller;
 
-use Symfony\Component\HttpKernel\Fragment\FragmentRendererInterface;
-
 /**
  * Acts as a marker and a data holder for a Controller.
  *
